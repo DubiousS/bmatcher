@@ -45,3 +45,9 @@ int sspn(const char *string)
     }
     return 0;
 }
+
+int explode(const char *string, char item, char *ptr)
+{
+    
+    return 0;
+}

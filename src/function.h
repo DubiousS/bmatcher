@@ -1,3 +1,10 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <dirent.h>
+#include <sys/types.h>
+#define ALPHABET_LEN 256
+
 #ifndef FUNCTION_H
 #define FUNCTION_H
 #define RED   "\x1B[31m"
@@ -9,5 +16,12 @@
 #define WHT   "\x1B[37m"
 #define RESET "\x1B[0m"
 
+void dirout(DIR *cdir, char *path);
+void list_dir (const char * dir_name, const int f, char *pattern);
+int file_read(const char * path, char * pattern);
 
 #endif
+
+
+
+
