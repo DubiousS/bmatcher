@@ -4,8 +4,13 @@
 #include <dirent.h>
 
 
-int main(int argc, char const *argv[])
+int main(int argc, char *argv[])
 {
-    list_dir(argv[1], 1, "a");
+	
+    if(argc == 4 && scmp(argv[1], "-r")) {
+    	list_dir(argv[3], 1, argv[2]);
+    } else if(argc == 3)  {
+    	list_dir(argv[2], 0, argv[1]);
+    }
     return 0;
 }

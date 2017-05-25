@@ -1,4 +1,5 @@
 #include "function.h"
+#include "strings.h"
 
 void computeLastOccurrence(int *J, char *pattern, int patternLength)
 {
@@ -32,10 +33,10 @@ int BMatcher(char *text, int textLength, char *pattern, int patternLength)
             for (x = 0; x < textLength; x++)
             {
                 if (x == shift)
-                    printf("\x1b[31;1m");
+                    printf(GRN);
                 else if (x == shift + patternLength)
                 {
-                    printf("\x1b[0m");
+                    printf(RESET);
                     break;
                 }
                 printf("%c", text[x]);
@@ -49,13 +50,14 @@ int BMatcher(char *text, int textLength, char *pattern, int patternLength)
 }
 
 
-void list_dir (const char * dir_name, const int f, char *pattern)
+void list_dir (const char * dir_name, int f, char *pattern)
 {
     DIR *dir;
     dir = opendir (dir_name);
 
-    if (!dir) {
-        printf("Error open dir.");
+    if (dir == NULL) {
+        printf("Error open dir.\n");
+        exit(0);
     }
     while (1) {
         struct dirent *entry;
@@ -65,14 +67,16 @@ void list_dir (const char * dir_name, const int f, char *pattern)
         const char *d_name;
         entry = readdir(dir);
         
-        if (!entry) break;
+        if (entry == NULL) break;
 
         d_name = entry->d_name;
-        if (strncmp(d_name, ".", strlen("."))) {
+        if (d_name == NULL) break;
+        if (sspn(d_name, '.')) {
             snprintf(path_full, PATH_MAX, "%s/%s", dir_name, d_name);
-            if(!strcmp(path_full + strlen(path_full) - 4, ".txt")) {
-                file_read(path_full, pattern);
-                printf("%s\n", path_full);       
+            if(scmp(path_full + slen(path_full) - 4, ".txt")) {
+                if(!check(path_full)) {
+                    file_read(path_full, pattern); 
+                }     
             }
         }
         
@@ -87,20 +91,69 @@ void list_dir (const char * dir_name, const int f, char *pattern)
             }
         }
     }
-    closedir(dir);
+    if (dir != NULL) closedir(dir);
 }
 
-int file_read(const char * path, char *pattern) {
-    char text[10240];
-    char temp;
+int file_read(char *path, char *pattern) {
+    int k = 0;
+    printf(RED "\n");
+    while(k < slen(path) + 4) {
+        printf("-");
+        k++;
+    }
+    printf("\n| %s |\n", path);
+    
+    k = 0;
+    
+    while(k < slen(path) + 4) {
+        printf("-");
+        k++;
+    }
+    printf("\n\n" RESET);
+
+    int patternLength = slen(pattern);
+    pattern[patternLength] = '\0';
+    FILE *input;
+    input = fopen(path, "r");
+    if(input == NULL) return 0;
+    int textLength = 0;
+    while (!feof(input))
+    {
+        fgetc(input);
+        textLength++;
+    }
+    if (patternLength > textLength)
+    {
+        printf("Pattern is bigger than text.\n");
+        return -1;
+    }
+    char *text = (char*)calloc(textLength, sizeof(char));
+    rewind(input);
     int i = 0;
-    text[10239] = '\0';
-    FILE *input = fopen(path, "rt");
-    while(fscanf(input, "%c", &temp) != EOF && i < 10239) {
-        *(text + i) = temp;
+    while (!feof(input))
+    {
+        fscanf(input, "%c", &text[i]);
         i++;
     }
     fclose(input);
-    //BMatcher(text, strlen(text), pattern, strlen(pattern));
+    int lastSym = BMatcher(text, strlen(text), pattern, strlen(pattern));
+    if(lastSym == 0) {   
+        return 0;
+    }
+    while (lastSym < textLength)
+    {
+        printf("%c", text[lastSym]);
+        lastSym++;
+    }
+    return 0;
+}
+
+
+int check(char *str) 
+{
+    while(*(str + 1)) {
+        if(*str == '/' && *(str + 1) == '.') return 1;
+        str++;
+    }
     return 0;
 }

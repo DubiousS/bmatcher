@@ -29,25 +29,11 @@ int slen(const char *one)
     return i;
 }
 
-int sspn(const char *string)
+int sspn(const char *string, const char item)
 {
-    char arr[] = {':', '*', '?', '"', '<', '>', '|'};
-    int i, j;
+    int i;
     for (i = 0; string[i] != '\0'; i++) {
-        for (j = 0; j < slen(arr); j++) {
-            if ((string[i] == arr[0]) && (string[i + 1] == '/')) {
-                continue;
-            }
-            if (string[i] == arr[j]) {
-                return i;
-            }
-        }
+        if(string[i] == item) return 1;
     }
-    return 0;
-}
-
-int explode(const char *string, char item, char *ptr)
-{
-    
     return 0;
 }

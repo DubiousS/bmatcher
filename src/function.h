@@ -18,7 +18,8 @@
 
 void dirout(DIR *cdir, char *path);
 void list_dir (const char * dir_name, const int f, char *pattern);
-int file_read(const char * path, char * pattern);
+int file_read(char * path, char * pattern);
+int check(char *str);
 
 #endif
 
