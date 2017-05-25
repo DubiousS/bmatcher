@@ -6,24 +6,70 @@ void computeLastOccurrence(int *J, char *pattern, int patternLength)
     for (int i = 0; i < ALPHABET_LEN; i++)
         J[i] = patternLength;
 
-    for (int i = 0; i < patternLength-1; i++)
+    for (int i = 0; i < patternLength-1; i++){
         J[(int)pattern[i]] = patternLength-1 - i;
+    }
+    if(sspn(pattern, '.') || sspn(pattern, '*')) {
+        for (int i = 0; i < ALPHABET_LEN; i++)
+            J[i] = 1;
+    }
 }
 
 int BMatcher(char *text, int textLength, char *pattern, int patternLength)
 {
-    int x, i, shift;
+    int x, i, shift, len = 0, temp;
     int J[ALPHABET_LEN];
+
     computeLastOccurrence(J, pattern, patternLength);
+    
     i = patternLength-1;
+    
     while (i < textLength)
     {
         int j = patternLength-1;
-        if(pattern[j] == '*') {
-
-        }
-        while (j >= 0 && ((text[i] == pattern[j])))
-        {
+        len = 0;
+        while (j >= 0 && (text[i] == pattern[j] || pattern[j] == '.' || pattern[j] == '*')) {
+            if(pattern[j] == '*' && pattern[j - 1] == '\\') {
+                if(text[i] == '*') {
+                    j -= 2;
+                    len++;
+                    i--;
+                    continue;
+                } else break;
+            } else if(pattern[j] == '.' && pattern[j - 1] == '\\') {
+                if(text[i] == '.') {
+                    j -= 2;
+                    len++;
+                    i--;
+                    continue;
+                } else break;
+            } 
+            if(pattern[j] == '*' && pattern[j - 1] == '*') {
+                j--;
+                continue;
+            }
+            if(pattern[j] == '*') {
+                j--;
+                temp = i;
+                if(pattern[j] == '.') {
+                    i--;
+                    len++;
+                    j--;
+                    continue;
+                }
+                while(pattern[j] != text[temp] && temp > 0) {
+                    temp--;
+                    len++;
+                }
+                if(temp != 0) {
+                    i = temp;
+                    len++;
+                    i--;
+                    j--;
+                } else break;
+                continue;
+            }
+            len++;
             --i;
             --j;
         }
@@ -34,17 +80,17 @@ int BMatcher(char *text, int textLength, char *pattern, int patternLength)
             {
                 if (x == shift)
                     printf(GRN);
-                else if (x == shift + patternLength)
+                else if (x == shift + len)
                 {
                     printf(RESET);
                     break;
                 }
                 printf("%c", text[x]);
             }
-            x += BMatcher(text + shift + patternLength, strlen(text + shift + patternLength), pattern, patternLength);
+            x += BMatcher(text + shift + len, strlen(text + shift + len), pattern, patternLength);
             return x;
         }
-        i += J[(int)text[i]];
+        i += J[(int)text[i]] + len;
     }
     return 0;
 }
@@ -56,7 +102,7 @@ void list_dir (const char * dir_name, int f, char *pattern)
     dir = opendir (dir_name);
 
     if (dir == NULL) {
-        printf("Error open dir.\n");
+        printf(GRN "Search end.\n" RESET);
         exit(0);
     }
     while (1) {
@@ -96,20 +142,13 @@ void list_dir (const char * dir_name, int f, char *pattern)
 
 int file_read(char *path, char *pattern) {
     int k = 0;
-    printf(RED "\n");
-    while(k < slen(path) + 4) {
+    printf("\n");
+    while(k < slen(path) + 7) {
         printf("-");
         k++;
     }
-    printf("\n| %s |\n", path);
-    
-    k = 0;
-    
-    while(k < slen(path) + 4) {
-        printf("-");
-        k++;
-    }
-    printf("\n\n" RESET);
+    printf("\nopen - "RED"%s \n", path);
+    printf("\n" RESET);
 
     int patternLength = slen(pattern);
     pattern[patternLength] = '\0';
@@ -136,8 +175,23 @@ int file_read(char *path, char *pattern) {
         i++;
     }
     fclose(input);
+
+    if(scmp(pattern, "*")) {
+        printf(GRN "%s\n" RESET, text);
+        return 0;
+    } else if(slen(pattern) == 0) {
+        printf(GRN "%s\n" RESET, text);
+        return 0;
+    } else if(pattern[0] == '*' || pattern[patternLength - 1] == '*') {
+        printf("Uncorrect.\n");
+        return 0;
+    }
+
+
+
     int lastSym = BMatcher(text, strlen(text), pattern, strlen(pattern));
-    if(lastSym == 0) {   
+    if(lastSym == 0) {  
+    printf("Not found pattern.\n\n"); 
         return 0;
     }
     while (lastSym < textLength)
